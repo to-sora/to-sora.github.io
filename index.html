@@ -1,1 +1,85 @@
-"Hello World"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub User Card</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .user-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+        }
+        .username {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .bio {
+            font-size: 1em;
+            color: #555;
+        }
+        .profile-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .profile-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-card">
+        <img id="avatar" class="avatar" src="" alt="GitHub Avatar">
+        <div id="username" class="username">Username</div>
+        <div id="bio" class="bio">Bio</div>
+        <a id="profile-link" class="profile-link" href="" target="_blank">View Profile</a>
+    </div>
+
+    <script>
+        // Replace with the GitHub username you want to test
+        const githubUsername = 'octocat';
+
+        async function fetchGitHubUser(username) {
+            try {
+                const response = await fetch(`https://api.github.com/users/${username}`);
+                if (!response.ok) throw new Error('User not found');
+                const data = await response.json();
+
+                // Set user information in the card
+                document.getElementById('avatar').src = data.avatar_url;
+                document.getElementById('username').textContent = data.login;
+                document.getElementById('bio').textContent = data.bio || 'No bio available.';
+                document.getElementById('profile-link').href = data.html_url;
+            } catch (error) {
+                console.error('Error fetching GitHub user:', error);
+                alert('Could not fetch user information.');
+            }
+        }
+
+        // Fetch GitHub user information when the page loads
+        fetchGitHubUser(githubUsername);
+    </script>
+</body>
+</html>
