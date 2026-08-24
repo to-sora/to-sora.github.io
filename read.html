@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Document reader">
+  <title>Document · TODO</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+</head>
+<body data-page="reader">
+  <header class="site-header">
+    <a class="brand" href="index.html"><span data-config="displayName">TODO</span></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="index.html">Home</a>
+      <a class="active" href="documents.html">Documents</a>
+      <a href="projects.html">Projects</a>
+    </nav>
+  </header>
+
+  <main class="shell reader-shell">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="documents.html">Documents</a>
+      <span>/</span>
+      <a id="reader-category-link" href="documents.html">Category</a>
+      <span>/</span>
+      <span id="reader-filename">Document</span>
+    </nav>
+
+    <section class="reader-heading">
+      <div>
+        <p id="reader-category" class="eyebrow">DOCUMENT</p>
+        <h1 id="reader-title">Loading…</h1>
+      </div>
+      <a id="reader-raw-link" class="button-link" target="_blank" rel="noopener noreferrer">Open raw ↗</a>
+    </section>
+
+    <div id="reader-meta" class="reader-meta"></div>
+    <div id="reader-status" class="status-line" role="status">Loading document…</div>
+    <article id="reader-content" class="prose"></article>
+  </main>
+
+  <footer class="site-footer">
+    <a href="documents.html">← Back to documents</a>
+    <span>Read only</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <script src="site-config.js"></script>
+  <script src="assets/common.js"></script>
+  <script src="assets/markdown.js"></script>
+  <script src="assets/reader.js"></script>
+</body>
+</html>
