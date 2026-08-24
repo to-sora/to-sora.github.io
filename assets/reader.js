@@ -56,10 +56,19 @@
     });
   }
 
-  async function renderMarkdown(path) {
+  async function fetchText(path) {
     const response = await fetch(P.rawUrl(path), { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Document request failed (${response.status}).`);
-    await window.PortfolioMarkdown.renderMarkdownInto(elements.content, await response.text(), path);
+    return response.text();
+  }
+
+  async function renderMarkdown(path) {
+    await window.PortfolioMarkdown.renderMarkdownInto(elements.content, await fetchText(path), path);
+  }
+
+  async function renderTex(path) {
+    if (!window.PortfolioTex?.renderLatexInto) throw new Error('LaTeX renderer failed to load.');
+    await window.PortfolioTex.renderLatexInto(elements.content, await fetchText(path), path);
   }
 
   async function renderDocx(path) {
@@ -126,6 +135,7 @@
 
     try {
       if (ext === 'md' || ext === 'markdown') await renderMarkdown(path);
+      else if (ext === 'tex') await renderTex(path);
       else if (ext === 'docx') await renderDocx(path);
       else showRawFallback(path);
       elements.status.textContent = '';
