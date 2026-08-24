@@ -35,8 +35,12 @@
     return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
   }
 
+  function categoryDirectoryFromPath(path) {
+    return String(path || '').split('/')[0] || '';
+  }
+
   function categoryFromPath(path) {
-    const first = String(path || '').split('/')[0];
+    const first = categoryDirectoryFromPath(path);
     const prefix = config.documentDirectoryPrefix || 'doc-';
     return first.startsWith(prefix) ? first.slice(prefix.length) : '';
   }
@@ -58,28 +62,10 @@
     return ['md', 'markdown', 'docx'].includes(extension(path));
   }
 
-  function applyConfig() {
-    document.querySelectorAll('[data-config]').forEach(node => {
-      const key = node.getAttribute('data-config');
-      if (Object.prototype.hasOwnProperty.call(config, key)) {
-        node.textContent = config[key];
-      }
-    });
-
-    document.querySelectorAll('[data-config-email]').forEach(node => {
-      node.textContent = config.email || 'TODO';
-      node.href = config.email && config.email !== 'TODO' ? `mailto:${config.email}` : '#';
-    });
-
+  function applyShell() {
     document.querySelectorAll('[data-github-repo]').forEach(node => {
       node.href = repoUrl();
     });
-
-    if (config.siteTitle) {
-      const current = document.title;
-      if (current === 'TODO') document.title = config.siteTitle;
-      else document.title = current.replace('TODO', config.siteTitle);
-    }
   }
 
   window.Portfolio = Object.freeze({
@@ -89,6 +75,7 @@
     apiTreeUrl,
     fileName,
     extension,
+    categoryDirectoryFromPath,
     categoryFromPath,
     humanize,
     readableTitle,
@@ -96,8 +83,8 @@
   });
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyConfig, { once: true });
+    document.addEventListener('DOMContentLoaded', applyShell, { once: true });
   } else {
-    applyConfig();
+    applyShell();
   }
 })();

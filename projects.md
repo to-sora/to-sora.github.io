@@ -1,23 +1,15 @@
-# TODO
+# Projects
 
-TODO: Add a short introduction to your projects.
+Edit only this Markdown file to maintain the Projects page.
 
 ## TODO: Project name
 
-TODO: Describe the project, what problem it solves, your role, and the important technical details.
+TODO: Describe the project, what problem it solves, what you built, and the result.
 
 - Repository: TODO
-- Demo: TODO
-- Stack: TODO
+- Demo / paper / notes: TODO
+- Technologies: TODO
 
-## TODO: Project name
+## TODO: Another project
 
-TODO: Add another project here. This file supports normal Markdown, images, code blocks, tables, and math.
-
-Example inline math: $E = mc^2$
-
-Example display math:
-
-$$
-L(\theta) = -\sum_i y_i \log p_\theta(y_i)
-$$
+TODO: Add another project section, or delete this example.

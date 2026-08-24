@@ -1,154 +1,121 @@
 # Portfolio v2
 
-A read-only GitHub Pages portfolio with three permanent navigation targets:
+A read-only GitHub Pages portfolio designed so normal content maintenance does **not** require editing HTML, JavaScript, or CSS.
 
-- **Home** — main introduction page.
-- **Documents** — client-side discovery, filtering, and sorting of files under `doc-*` directories.
-- **Projects** — rendered directly from `projects.md`.
+## Files you edit
 
-No database, CMS, server, or hand-maintained document index is required.
+For normal use, edit only:
 
-## First-time TODO values
+- `home.md` — Home / main introduction page.
+- `projects.md` — Projects page.
+- `documents.md` — short introduction above the document browser.
+- `categories.json` — optional map from a `doc-*` directory name to its category description.
+- `doc-*/...` — your documents and their metadata sidecars.
 
-Edit `site-config.js` and replace the personal values marked `TODO`:
+The `.html` files and `assets/*.js` / `assets/*.css` are renderer implementation files. You should not need to edit them.
 
-```js
-siteTitle: "TODO",
-displayName: "TODO",
-headline: "TODO",
-introduction: "TODO",
-location: "TODO",
-email: "TODO",
-```
+## Ready-to-copy templates
 
-Edit `projects.md` and replace its `TODO` content.
-
-The repository/branch discovery values are already set for this branch:
-
-```js
-githubOwner: "to-sora",
-githubRepo: "to-sora.github.io",
-contentBranch: "portfolio-v2",
-```
-
-Keep `contentBranch` equal to the branch from which you publish/update documents.
-
-## Minimum-work document upload
-
-For a category named `research`, create/use the directory:
+A document template is provided at:
 
 ```text
-doc-research/
+templates/document.md
+templates/document.md.json
 ```
 
-Upload the document:
+Copy both into any `doc-<category-name>/` directory, rename them, and replace the `TODO` values.
+
+## Working category example
+
+This branch contains a real example category:
 
 ```text
-doc-research/research_draft.pdf
+doc-openai-deep-research/
+├── example-research.md
+├── example-research.md.json
+└── _assets/
+    └── example-pipeline.svg
 ```
 
-and its optional-but-recommended metadata sidecar:
+The example Markdown demonstrates tables, fenced code, relative images, inline math, and display math.
+
+## Minimum-work upload
+
+To add a document to the `openai-deep-research` category, upload:
 
 ```text
-doc-research/research_draft.pdf.json
+doc-openai-deep-research/research_draft.pdf
+doc-openai-deep-research/research_draft.pdf.json
 ```
 
-Metadata format:
+Metadata:
 
 ```json
 {
-  "tags": ["research", "ml"],
+  "tags": ["research", "openai"],
   "createdate_show": "2026:08:24"
 }
 ```
 
-That is all. The Documents page requests the repository tree from GitHub, discovers every top-level `doc-<category>` directory, pairs files with `<filename>.<primary_ext>.json`, and builds the list in the visitor's browser.
+Then stop. There is no document manifest to update.
 
-A formal schema is included at `document-metadata.schema.json`.
+The browser discovers all top-level directories whose names start with `doc-`, pairs each file with `<filename>.<ext>.json` when present, and builds the list automatically.
 
-### Missing metadata
+## Category descriptions
 
-A document still appears if its sidecar is missing or invalid. It is shown with `Date unknown` and a metadata warning, so a metadata mistake cannot make the document disappear.
+`categories.json` is a direct directory-name -> description map:
 
-## Categories
-
-The directory name is the category:
-
-```text
-doc-research/   -> research
-doc-travel/     -> travel
-doc-notes/      -> notes
+```json
+{
+  "doc-openai-deep-research": "Notes and reports related to OpenAI Deep Research.",
+  "doc-travel": "Travel plans, trip reports, and references."
+}
 ```
 
-No category configuration is required. Adding another `doc-*` directory automatically adds another category.
+The category itself is still auto-discovered from the directory. The JSON entry is only for the human-readable description. If you create a new `doc-*` directory and do not add it to `categories.json`, it still appears normally.
 
-The Documents page supports shareable query parameters:
+## Sorting and navigation
 
-```text
-documents.html?category=research
-documents.html?tag=ml
-documents.html?category=research&tag=ml&sort=oldest
-```
+The Documents page supports category jump links, category filtering, tag filtering, search, newest/oldest sorting using `createdate_show`, tag A-Z sorting, filename sorting, and shareable query parameters such as `documents.html?category=openai-deep-research&tag=openai`.
 
-## Supported document behavior
+## Rendering behavior
 
-Rendered inside the portfolio reader:
+Rendered inside the portfolio:
 
-- `.md`, `.markdown` — GitHub-flavored Markdown with sanitized HTML, relative images/links, and KaTeX math.
-- `.docx` — converted client-side to HTML with Mammoth.js.
+- `.md`, `.markdown` — GitHub-flavored Markdown, sanitized HTML, relative images/links, and KaTeX math.
+- `.docx` — browser-side conversion with Mammoth.js.
 
-Opened as the original/raw file in a new browser tab:
+Opened as the original file in a new tab: `.pdf`, `.txt`, `.csv`, `.json`, `.jsonl`, `.yaml`, `.yml`, images, browser-supported audio/video, and other unrecognized formats.
 
-- `.pdf`
-- `.txt`
-- `.csv`
-- `.json`
-- `.jsonl`
-- `.yaml`, `.yml`
-- images such as `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`
-- browser-supported audio/video such as `.mp3`, `.wav`, `.ogg`, `.mp4`, `.webm`
-- any other unrecognized file type
+## Markdown relative assets
 
-This intentionally avoids lossy conversion for formats the browser can already display or download directly.
-
-## Markdown images and math
-
-Relative image paths are resolved relative to the Markdown document itself.
-
-Example:
+Put support files under an underscore-prefixed directory so they are not listed as documents:
 
 ```text
-doc-research/
+doc-openai-deep-research/
 ├── note.md
 ├── note.md.json
 └── _assets/
-    └── result.png
+    └── figure.png
 ```
 
-Inside `note.md`:
+Then write `![Figure](_assets/figure.png)`. The reader resolves that path relative to `note.md`.
 
-```md
-![Result](_assets/result.png)
+Math works as `$E = mc^2$` and display blocks delimited by `$$`.
 
-Inline math: $E = mc^2$
+## Metadata schema
 
-$$
-L(\theta) = -\sum_i y_i \log p_\theta(y_i)
-$$
+The sidecar schema remains:
+
+```json
+{
+  "tags": ["tag1", "tag2"],
+  "createdate_show": "YYYY:MM:DD"
+}
 ```
 
-Nested directories beginning with `_` are treated as support-asset directories and are not shown as documents in the list. This lets Markdown keep nearby images without polluting the document index.
-
-## Client-side discovery and caching
-
-The document page makes one GitHub Trees API request to discover repository paths, then reads metadata sidecars from `raw.githubusercontent.com`. The resulting document index is cached in `localStorage` and shown immediately on later visits while a fresh copy is requested.
-
-If GitHub discovery is temporarily unavailable or rate-limited, the last cached index remains usable when available.
+A formal schema is available at `document-metadata.schema.json`.
 
 ## Read-only design
 
-The site contains no forms that write to GitHub and no authentication/token is shipped to the browser. Visitors can only read files already published in this public repository/branch.
-
-## Deployment
-
-Review this branch first. When ready, either configure GitHub Pages to publish from `portfolio-v2`, or merge it and update `contentBranch` to whichever branch will contain future `doc-*` uploads.
+The site contains no write forms, no authentication token, and no backend. Visitors only read files already committed to the public repository branch.

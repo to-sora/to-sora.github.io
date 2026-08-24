@@ -16,9 +16,7 @@
   function safeDocumentPath() {
     const path = new URLSearchParams(location.search).get('doc') || '';
     const prefix = P.config.documentDirectoryPrefix || 'doc-';
-    if (!path || path.startsWith('/') || path.includes('..') || !path.split('/')[0].startsWith(prefix)) {
-      return '';
-    }
+    if (!path || path.startsWith('/') || path.includes('..') || !path.split('/')[0].startsWith(prefix)) return '';
     return path;
   }
 
@@ -38,7 +36,6 @@
 
   function renderMeta(meta, ext) {
     elements.meta.replaceChildren();
-
     const type = document.createElement('span');
     type.className = 'extension-badge';
     type.textContent = ext || 'file';
@@ -68,7 +65,6 @@
   async function renderDocx(path) {
     if (!window.mammoth) throw new Error('DOCX renderer failed to load.');
     if (!window.DOMPurify) throw new Error('HTML sanitizer failed to load.');
-
     const response = await fetch(P.rawUrl(path), { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Document request failed (${response.status}).`);
     const arrayBuffer = await response.arrayBuffer();
@@ -117,27 +113,21 @@
     const filename = P.fileName(path);
     const category = P.categoryFromPath(path);
     const ext = P.extension(path);
-    const raw = P.rawUrl(path);
-
     elements.filename.textContent = filename;
-    elements.category.textContent = P.humanize(category);
-    elements.categoryLink.textContent = P.humanize(category);
+    elements.category.textContent = category;
+    elements.categoryLink.textContent = category;
     elements.categoryLink.href = `documents.html?category=${encodeURIComponent(category)}`;
     elements.title.textContent = filename;
-    elements.raw.href = raw;
-    document.title = `${filename} · ${P.config.siteTitle || 'TODO'}`;
+    elements.raw.href = P.rawUrl(path);
+    document.title = `${filename} · Portfolio`;
 
     const meta = await fetchSidecar(path);
     renderMeta(meta, ext);
 
     try {
-      if (ext === 'md' || ext === 'markdown') {
-        await renderMarkdown(path);
-      } else if (ext === 'docx') {
-        await renderDocx(path);
-      } else {
-        showRawFallback(path);
-      }
+      if (ext === 'md' || ext === 'markdown') await renderMarkdown(path);
+      else if (ext === 'docx') await renderDocx(path);
+      else showRawFallback(path);
       elements.status.textContent = '';
     } catch (error) {
       elements.status.textContent = 'Could not render this document.';

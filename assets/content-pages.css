@@ -1,0 +1,18 @@
+.document-category-group {
+  scroll-margin-top: 6rem;
+  margin: 2.25rem 0 3rem;
+}
+
+.document-category-group > h2 {
+  margin-bottom: 0.35rem;
+}
+
+.category-description {
+  margin: 0 0 1rem;
+  max-width: 72ch;
+  opacity: 0.72;
+}
+
+.document-category-group .document-row + .document-row {
+  margin-top: 0.75rem;
+}

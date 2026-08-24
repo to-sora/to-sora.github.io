@@ -13,16 +13,12 @@
     list: document.getElementById('documents-list')
   };
 
-  const state = {
-    documents: [],
-    source: 'network'
-  };
+  const state = { documents: [], categoryDescriptions: {}, source: 'network' };
 
   function isDocumentPath(path) {
     const prefix = P.config.documentDirectoryPrefix || 'doc-';
     const parts = path.split('/');
     if (parts.length < 2 || !parts[0].startsWith(prefix)) return false;
-    // Any nested component beginning with "_" is treated as a supporting asset directory.
     return !parts.slice(1, -1).some(part => part.startsWith('_'));
   }
 
@@ -33,11 +29,7 @@
       : [];
     const date = typeof meta.createdate_show === 'string' ? meta.createdate_show.trim() : '';
     const validDate = /^\d{4}:\d{2}:\d{2}$/.test(date);
-    return {
-      tags,
-      createdate_show: validDate ? date : '',
-      metadataValid: Array.isArray(meta.tags) && validDate
-    };
+    return { tags, createdate_show: validDate ? date : '', metadataValid: Array.isArray(meta.tags) && validDate };
   }
 
   function dateValue(doc) {
@@ -47,21 +39,29 @@
     return Number.isFinite(date) ? date : Number.NEGATIVE_INFINITY;
   }
 
-  async function fetchMetadata(path) {
+  async function fetchJson(path) {
     const response = await fetch(P.rawUrl(path), { cache: 'no-cache' });
-    if (!response.ok) throw new Error(`Metadata request failed: ${response.status}`);
-    return normalizeMetadata(await response.json());
+    if (!response.ok) throw new Error(`${path} request failed (${response.status}).`);
+    return response.json();
+  }
+
+  async function loadCategoryDescriptions() {
+    try {
+      const value = await fetchJson(P.config.categoryDescriptionsPath || 'categories.json');
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+      return Object.fromEntries(Object.entries(value).filter(([, description]) => typeof description === 'string'));
+    } catch {
+      return {};
+    }
+  }
+
+  async function fetchMetadata(path) {
+    return normalizeMetadata(await fetchJson(path));
   }
 
   async function discoverDocuments() {
-    const response = await fetch(P.apiTreeUrl(), {
-      headers: { Accept: 'application/vnd.github+json' },
-      cache: 'no-cache'
-    });
-    if (!response.ok) {
-      throw new Error(`GitHub tree request failed (${response.status}).`);
-    }
-
+    const response = await fetch(P.apiTreeUrl(), { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-cache' });
+    if (!response.ok) throw new Error(`GitHub tree request failed (${response.status}).`);
     const payload = await response.json();
     const blobs = (payload.tree || []).filter(item => item.type === 'blob' && isDocumentPath(item.path));
     const blobPaths = new Set(blobs.map(item => item.path));
@@ -74,15 +74,11 @@
     }
 
     const sidecarPaths = new Set(sidecars.values());
-    const docPaths = [...blobPaths]
-      .filter(path => !sidecarPaths.has(path))
-      .sort((a, b) => a.localeCompare(b));
-
+    const docPaths = [...blobPaths].filter(path => !sidecarPaths.has(path)).sort((a, b) => a.localeCompare(b));
     const documents = await Promise.all(docPaths.map(async path => {
       const sidecar = sidecars.get(path);
       let metadata = { tags: [], createdate_show: '', metadataValid: false };
       let metadataState = sidecar ? 'invalid' : 'missing';
-
       if (sidecar) {
         try {
           metadata = await fetchMetadata(sidecar);
@@ -91,20 +87,18 @@
           metadataState = 'invalid';
         }
       }
-
       return {
         path,
         sidecar: sidecar || '',
         filename: P.fileName(path),
-        title: P.readableTitle(path),
         extension: P.extension(path),
         category: P.categoryFromPath(path),
+        categoryDirectory: P.categoryDirectoryFromPath(path),
         tags: metadata.tags,
         createdate_show: metadata.createdate_show,
         metadataState
       };
     }));
-
     return { documents, truncated: Boolean(payload.truncated) };
   }
 
@@ -113,27 +107,18 @@
       const parsed = JSON.parse(localStorage.getItem(cacheKey) || 'null');
       if (!parsed || !Array.isArray(parsed.documents)) return null;
       return parsed;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }
 
-  function saveCache(documents) {
+  function saveCache() {
     try {
-      localStorage.setItem(cacheKey, JSON.stringify({ documents, savedAt: Date.now() }));
-    } catch {
-      // Storage is an optional optimization; discovery still works without it.
-    }
+      localStorage.setItem(cacheKey, JSON.stringify({ documents: state.documents, categoryDescriptions: state.categoryDescriptions, savedAt: Date.now() }));
+    } catch { }
   }
 
   function queryState() {
     const params = new URLSearchParams(location.search);
-    return {
-      category: params.get('category') || '',
-      tag: params.get('tag') || '',
-      sort: params.get('sort') || 'newest',
-      q: params.get('q') || ''
-    };
+    return { category: params.get('category') || '', tag: params.get('tag') || '', sort: params.get('sort') || 'newest', q: params.get('q') || '' };
   }
 
   function setQuery(next) {
@@ -147,12 +132,7 @@
   }
 
   function currentFilters() {
-    return {
-      category: elements.category.value,
-      tag: elements.tag.value,
-      sort: elements.sort.value,
-      q: elements.search.value.trim()
-    };
+    return { category: elements.category.value, tag: elements.tag.value, sort: elements.sort.value, q: elements.search.value.trim() };
   }
 
   function option(select, value, label) {
@@ -162,42 +142,48 @@
     select.appendChild(node);
   }
 
+  function categories() {
+    return [...new Set(state.documents.map(doc => doc.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  }
+
   function renderFilters() {
     const wanted = queryState();
-    const categories = [...new Set(state.documents.map(doc => doc.category).filter(Boolean))].sort();
+    const categoryValues = categories();
     const tags = [...new Set(state.documents.flatMap(doc => doc.tags))].sort((a, b) => a.localeCompare(b));
-
     elements.category.innerHTML = '<option value="">All categories</option>';
-    categories.forEach(category => option(elements.category, category, P.humanize(category)));
+    categoryValues.forEach(category => option(elements.category, category, category));
     elements.tag.innerHTML = '<option value="">All tags</option>';
     tags.forEach(tag => option(elements.tag, tag, tag));
-
-    elements.category.value = categories.includes(wanted.category) ? wanted.category : '';
+    elements.category.value = categoryValues.includes(wanted.category) ? wanted.category : '';
     elements.tag.value = tags.includes(wanted.tag) ? wanted.tag : '';
-    elements.sort.value = ['newest', 'oldest', 'name-asc', 'name-desc'].includes(wanted.sort) ? wanted.sort : 'newest';
+    elements.sort.value = ['newest', 'oldest', 'tag-asc', 'name-asc', 'name-desc'].includes(wanted.sort) ? wanted.sort : 'newest';
     elements.search.value = wanted.q;
-
     elements.jump.replaceChildren();
-    const all = document.createElement('button');
-    all.type = 'button';
-    all.textContent = 'All';
-    all.className = elements.category.value ? 'chip-button' : 'chip-button active';
-    all.addEventListener('click', () => {
+
+    const allLink = document.createElement('a');
+    allLink.className = 'chip-button';
+    allLink.href = '#documents-status';
+    allLink.textContent = 'All';
+    allLink.addEventListener('click', event => {
+      event.preventDefault();
       elements.category.value = '';
       renderList();
+      document.getElementById('documents-status')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-    elements.jump.appendChild(all);
+    elements.jump.appendChild(allLink);
 
-    categories.forEach(category => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = P.humanize(category);
-      button.className = elements.category.value === category ? 'chip-button active' : 'chip-button';
-      button.addEventListener('click', () => {
+    categoryValues.forEach(category => {
+      const link = document.createElement('a');
+      link.className = 'chip-button';
+      link.href = `#category-${category}`;
+      link.textContent = category;
+      link.addEventListener('click', event => {
+        event.preventDefault();
         elements.category.value = category;
         renderList();
+        requestAnimationFrame(() => document.getElementById(`category-${category}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       });
-      elements.jump.appendChild(button);
+      elements.jump.appendChild(link);
     });
   }
 
@@ -205,19 +191,16 @@
     const docs = [...documents];
     if (sort === 'oldest') {
       docs.sort((a, b) => {
-        const av = dateValue(a);
-        const bv = dateValue(b);
+        const av = dateValue(a), bv = dateValue(b);
         if (av === Number.NEGATIVE_INFINITY && bv !== Number.NEGATIVE_INFINITY) return 1;
         if (bv === Number.NEGATIVE_INFINITY && av !== Number.NEGATIVE_INFINITY) return -1;
         return av - bv || a.filename.localeCompare(b.filename);
       });
-    } else if (sort === 'name-asc') {
-      docs.sort((a, b) => a.filename.localeCompare(b.filename));
-    } else if (sort === 'name-desc') {
-      docs.sort((a, b) => b.filename.localeCompare(a.filename));
-    } else {
-      docs.sort((a, b) => dateValue(b) - dateValue(a) || a.filename.localeCompare(b.filename));
-    }
+    } else if (sort === 'tag-asc') {
+      docs.sort((a, b) => (a.tags[0] || '\uffff').localeCompare(b.tags[0] || '\uffff') || a.filename.localeCompare(b.filename));
+    } else if (sort === 'name-asc') docs.sort((a, b) => a.filename.localeCompare(b.filename));
+    else if (sort === 'name-desc') docs.sort((a, b) => b.filename.localeCompare(a.filename));
+    else docs.sort((a, b) => dateValue(b) - dateValue(a) || a.filename.localeCompare(b.filename));
     return docs;
   }
 
@@ -226,17 +209,19 @@
     if (filters.tag && !doc.tags.includes(filters.tag)) return false;
     if (filters.q) {
       const needle = filters.q.toLowerCase();
-      const haystack = [doc.filename, doc.category, ...doc.tags].join(' ').toLowerCase();
+      const description = state.categoryDescriptions[doc.categoryDirectory] || '';
+      const haystack = [doc.filename, doc.category, description, ...doc.tags].join(' ').toLowerCase();
       if (!haystack.includes(needle)) return false;
     }
     return true;
   }
 
   function makeTag(tag) {
-    const span = document.createElement('span');
-    span.className = 'tag';
-    span.textContent = `#${tag}`;
-    return span;
+    const link = document.createElement('a');
+    link.className = 'tag';
+    link.href = `documents.html?tag=${encodeURIComponent(tag)}`;
+    link.textContent = `#${tag}`;
+    return link;
   }
 
   function documentAction(doc) {
@@ -257,39 +242,23 @@
   function makeDocumentRow(doc) {
     const row = document.createElement('article');
     row.className = 'document-row';
-
     const main = document.createElement('div');
     main.className = 'document-main';
-
     const heading = document.createElement('div');
     heading.className = 'document-heading-line';
-    const title = document.createElement('h2');
+    const title = document.createElement('h3');
     title.textContent = doc.filename;
     heading.appendChild(title);
-
     const ext = document.createElement('span');
     ext.className = 'extension-badge';
     ext.textContent = doc.extension || 'file';
     heading.appendChild(ext);
     main.appendChild(heading);
-
     const detail = document.createElement('div');
     detail.className = 'document-detail';
-    const category = document.createElement('button');
-    category.type = 'button';
-    category.className = 'category-link';
-    category.textContent = P.humanize(doc.category);
-    category.addEventListener('click', () => {
-      elements.category.value = doc.category;
-      renderList();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-    detail.appendChild(category);
-
     const date = document.createElement('span');
     date.textContent = doc.createdate_show || 'Date unknown';
     detail.appendChild(date);
-
     if (doc.metadataState !== 'ok') {
       const metadata = document.createElement('span');
       metadata.className = 'metadata-warning';
@@ -297,72 +266,82 @@
       detail.appendChild(metadata);
     }
     main.appendChild(detail);
-
     if (doc.tags.length) {
       const tags = document.createElement('div');
       tags.className = 'tag-row';
       doc.tags.forEach(tag => tags.appendChild(makeTag(tag)));
       main.appendChild(tags);
     }
-
     row.appendChild(main);
     row.appendChild(documentAction(doc));
     return row;
   }
 
+  function renderCategoryGroup(category, docs) {
+    const section = document.createElement('section');
+    section.id = `category-${category}`;
+    section.className = 'document-category-group';
+    const heading = document.createElement('h2');
+    heading.textContent = category;
+    section.appendChild(heading);
+    const directory = `${P.config.documentDirectoryPrefix || 'doc-'}${category}`;
+    const description = state.categoryDescriptions[directory];
+    if (description) {
+      const descriptionNode = document.createElement('p');
+      descriptionNode.className = 'category-description';
+      descriptionNode.textContent = description;
+      section.appendChild(descriptionNode);
+    }
+    docs.forEach(doc => section.appendChild(makeDocumentRow(doc)));
+    return section;
+  }
+
   function renderList() {
     const filters = currentFilters();
     setQuery(filters);
-
-    elements.jump.querySelectorAll('button').forEach(button => {
-      const expected = filters.category ? P.humanize(filters.category) : 'All';
-      button.classList.toggle('active', button.textContent === expected);
-    });
-
     const filtered = sortDocuments(state.documents.filter(doc => matches(doc, filters)), filters.sort);
     elements.list.replaceChildren();
-    filtered.forEach(doc => elements.list.appendChild(makeDocumentRow(doc)));
-
+    const grouped = new Map();
+    filtered.forEach(doc => {
+      if (!grouped.has(doc.category)) grouped.set(doc.category, []);
+      grouped.get(doc.category).push(doc);
+    });
+    [...grouped.keys()].sort((a, b) => a.localeCompare(b)).forEach(category => elements.list.appendChild(renderCategoryGroup(category, grouped.get(category))));
     const noun = filtered.length === 1 ? 'document' : 'documents';
     elements.status.textContent = `${filtered.length} ${noun}${state.source === 'cache' ? ' · cached index' : ''}`;
-
     if (!filtered.length) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.innerHTML = '<strong>No matching documents.</strong><span>Change the category, tag, search text, or upload files under a doc-&lt;category&gt; directory.</span>';
+      empty.innerHTML = '<strong>No matching documents.</strong><span>Change the filters or upload files under a doc-&lt;category&gt; directory.</span>';
       elements.list.appendChild(empty);
     }
   }
 
   function bindControls() {
-    [elements.category, elements.tag, elements.sort].forEach(control => {
-      control.addEventListener('change', renderList);
-    });
+    [elements.category, elements.tag, elements.sort].forEach(control => control.addEventListener('change', renderList));
     elements.search.addEventListener('input', renderList);
   }
 
   async function start() {
     bindControls();
-
     const cached = loadCache();
     if (cached) {
       state.documents = cached.documents;
+      state.categoryDescriptions = cached.categoryDescriptions || {};
       state.source = 'cache';
       renderFilters();
       renderList();
       elements.status.textContent += ' · refreshing…';
     }
-
     try {
-      const result = await discoverDocuments();
+      const [result, descriptions] = await Promise.all([discoverDocuments(), loadCategoryDescriptions()]);
       state.documents = result.documents;
+      state.categoryDescriptions = descriptions;
       state.source = 'network';
-      saveCache(state.documents);
+      saveCache();
       renderFilters();
       renderList();
-      if (result.truncated) {
-        elements.status.textContent += ' · GitHub returned a truncated repository tree';
-      }
+      if (result.truncated) elements.status.textContent += ' · GitHub returned a truncated repository tree';
     } catch (error) {
       if (cached) {
         state.source = 'cache';

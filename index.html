@@ -3,53 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Read-only portfolio and document library.">
-  <title>TODO</title>
+  <meta name="description" content="Read-only Markdown-driven portfolio.">
+  <title>Portfolio</title>
   <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 </head>
 <body data-page="home">
   <header class="site-header">
-    <a class="brand" href="index.html" aria-label="Home"><span data-config="displayName">TODO</span></a>
+    <a class="brand" href="index.html">Portfolio</a>
     <nav class="site-nav" aria-label="Primary navigation">
       <a class="active" href="index.html">Home</a>
       <a href="documents.html">Documents</a>
       <a href="projects.html">Projects</a>
     </nav>
   </header>
-
-  <main class="shell home-shell">
-    <section class="hero">
-      <p class="eyebrow">READ-ONLY PORTFOLIO</p>
-      <h1 data-config="headline">TODO</h1>
-      <p class="hero-copy" data-config="introduction">TODO</p>
-      <div class="hero-meta">
-        <span data-config="location">TODO</span>
-        <a data-config-email href="#">TODO</a>
-      </div>
-    </section>
-
+  <main class="shell reader-shell">
+    <article id="home-content" class="prose loading-block" data-markdown-source="home.md" data-raw-link="home-raw-link">Loading home.md…</article>
     <section class="portal-grid" aria-label="Portfolio sections">
-      <a class="portal-card" href="documents.html">
-        <span class="portal-kicker">Library</span>
-        <h2>Documents</h2>
-        <p>Browse documents discovered automatically from <code>doc-*</code> directories. Filter by category, tag, and date.</p>
-        <span class="portal-link">Open documents →</span>
-      </a>
-      <a class="portal-card" href="projects.html">
-        <span class="portal-kicker">Work</span>
-        <h2>Projects</h2>
-        <p>A Markdown-driven project page for selected work, notes, links, and technical context.</p>
-        <span class="portal-link">Open projects →</span>
-      </a>
+      <a class="portal-card" href="documents.html"><span class="portal-kicker">Library</span><h2>Documents</h2><p>Auto-discovered from <code>doc-*</code> directories, with categories, tags, dates, and a Markdown/DOCX reader.</p><span class="portal-link">Open documents →</span></a>
+      <a class="portal-card" href="projects.html"><span class="portal-kicker">Work</span><h2>Projects</h2><p>The full page content comes from <code>projects.md</code>.</p><span class="portal-link">Open projects →</span></a>
     </section>
   </main>
-
-  <footer class="site-footer">
-    <span>Static · read only · hosted on GitHub Pages</span>
-    <a data-github-repo target="_blank" rel="noopener noreferrer">Source ↗</a>
-  </footer>
-
-  <script src="site-config.js"></script>
-  <script src="assets/common.js"></script>
+  <footer class="site-footer"><span>Content source: <code>home.md</code></span><a id="home-raw-link" target="_blank" rel="noopener noreferrer">Open source Markdown ↗</a></footer>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <script src="site-config.js"></script><script src="assets/common.js"></script><script src="assets/markdown.js"></script><script src="assets/page-markdown.js"></script>
 </body>
 </html>
