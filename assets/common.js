@@ -59,7 +59,7 @@
   }
 
   function isInlineRenderable(path) {
-    return ['md', 'markdown', 'docx'].includes(extension(path));
+    return ['md', 'markdown', 'tex', 'docx'].includes(extension(path));
   }
 
   function applyShell() {
