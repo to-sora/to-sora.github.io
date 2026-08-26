@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Document library"><title>Documents · Portfolio</title>
+  <link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/content-pages.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+</head>
+<body data-page="documents">
+  <header class="site-header"><a class="brand" href="index.html">Portfolio</a><nav class="site-nav" aria-label="Primary navigation"><a href="index.html">Home</a><a class="active" href="documents.html">Documents</a><a href="projects.html">Projects</a></nav></header>
+  <main class="shell">
+    <article class="prose page-heading" data-markdown-source="documents.md" data-raw-link="documents-raw-link">Loading documents.md…</article>
+    <section class="document-controls" aria-label="Document filters">
+      <label><span>Category</span><select id="category-filter"><option value="">All categories</option></select></label>
+      <label><span>Tag</span><select id="tag-filter"><option value="">All tags</option></select></label>
+      <label><span>Sort</span><select id="sort-order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="tag-asc">Tag A–Z</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option></select></label>
+      <label class="search-field"><span>Search</span><input id="search-filter" type="search" placeholder="Filename, category, or tag" autocomplete="off"></label>
+    </section>
+    <nav id="category-jump" class="category-jump" aria-label="Jump to category"></nav>
+    <div id="documents-status" class="status-line" role="status">Discovering documents…</div><div id="documents-list" class="document-list" aria-live="polite"></div>
+  </main>
+  <footer class="site-footer"><span>Upload a document + sidecar JSON; categories are discovered automatically.</span><a id="documents-raw-link" target="_blank" rel="noopener noreferrer">Edit page Markdown ↗</a></footer>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script><script src="site-config.js"></script><script src="assets/common.js"></script><script src="assets/markdown.js"></script><script src="assets/page-markdown.js"></script><script src="assets/documents.js"></script>
+</body>
+</html>
