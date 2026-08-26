@@ -230,27 +230,34 @@
     return link;
   }
 
-  function documentAction(doc) {
+  function documentDestination(doc) {
+    if (P.isInlineRenderable(doc.path)) {
+      return { href: `read.html?doc=${encodeURIComponent(doc.path)}`, label: 'Read →', newTab: false };
+    }
+    if (doc.extension === 'pdf') {
+      return { href: doc.path, label: 'View PDF ↗', newTab: true };
+    }
+    return { href: P.rawUrl(doc.path), label: 'Open raw ↗', newTab: true };
+  }
+
+  function applyDocumentDestination(link, destination) {
+    link.href = destination.href;
+    if (destination.newTab) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
+  }
+
+  function documentAction(destination) {
     const link = document.createElement('a');
     link.className = 'document-action';
-    if (P.isInlineRenderable(doc.path)) {
-      link.href = `read.html?doc=${encodeURIComponent(doc.path)}`;
-      link.textContent = 'Read →';
-    } else if (doc.extension === 'pdf') {
-      link.href = doc.path;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'View PDF ↗';
-    } else {
-      link.href = P.rawUrl(doc.path);
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'Open raw ↗';
-    }
+    applyDocumentDestination(link, destination);
+    link.textContent = destination.label;
     return link;
   }
 
   function makeDocumentRow(doc) {
+    const destination = documentDestination(doc);
     const row = document.createElement('article');
     row.className = 'document-row';
     const main = document.createElement('div');
@@ -258,7 +265,11 @@
     const heading = document.createElement('div');
     heading.className = 'document-heading-line';
     const title = document.createElement('h3');
-    title.textContent = doc.filename;
+    const titleLink = document.createElement('a');
+    titleLink.className = 'document-title-link';
+    titleLink.textContent = doc.filename;
+    applyDocumentDestination(titleLink, destination);
+    title.appendChild(titleLink);
     heading.appendChild(title);
     const ext = document.createElement('span');
     ext.className = 'extension-badge';
@@ -294,7 +305,7 @@
       main.appendChild(tags);
     }
     row.appendChild(main);
-    row.appendChild(documentAction(doc));
+    row.appendChild(documentAction(destination));
     return row;
   }
 

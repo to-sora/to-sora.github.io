@@ -32,22 +32,6 @@ templates/document.tex.json
 
 Copy a document plus its matching `.json` sidecar into any `doc-<category-name>/` directory, rename both, replace the `TODO` values, and commit.
 
-## Working category example
-
-This branch contains a real example category:
-
-```text
-doc-openai-deep-research/
-├── example-research.md
-├── example-research.md.json
-├── example-research.tex
-├── example-research.tex.json
-└── _assets/
-    └── example-pipeline.svg
-```
-
-The Markdown example demonstrates tables, fenced code, relative images, inline math, and display math. The LaTeX example demonstrates sections, formatting, lists, a simple table, relative images, and math.
-
 ## Minimum-work upload
 
 To add a document to the `openai-deep-research` category, upload:
