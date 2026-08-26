@@ -151,10 +151,18 @@ The sidecar schema remains:
 
 ```json
 {
-  "tags": ["tag1", "tag2"],
+  "tags": ["tag1", "tag2", "tag3"],
+  "summary": [
+    "Short summary line 1.",
+    "Short summary line 2.",
+    "Short summary line 3.",
+    "Short summary line 4."
+  ],
   "createdate_show": "YYYY:MM:DD"
 }
 ```
+
+`summary` is optional for existing documents. When present, it must contain exactly four non-empty strings; the document library displays them on the document card and includes them in search.
 
 A formal schema is available at `document-metadata.schema.json`.
 

@@ -1,4 +1,10 @@
 {
-  "tags": ["TODO", "tex"],
+  "tags": ["TODO-tag1", "TODO-tag2", "TODO-tag3"],
+  "summary": [
+    "TODO: Summary line 1.",
+    "TODO: Summary line 2.",
+    "TODO: Summary line 3.",
+    "TODO: Summary line 4."
+  ],
   "createdate_show": "YYYY:MM:DD"
 }

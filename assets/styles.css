@@ -213,6 +213,15 @@ code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospac
 }
 .document-detail { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; color: var(--muted); font-size: 0.85rem; }
 .metadata-warning { color: var(--warning); }
+.document-summary {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
 .tag-row, .reader-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 10px; }
 .tag {
   display: inline-flex;

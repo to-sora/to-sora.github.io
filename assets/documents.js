@@ -2,7 +2,7 @@
   'use strict';
 
   const P = window.Portfolio;
-  const cacheKey = `portfolio-documents:${P.config.githubOwner}/${P.config.githubRepo}@${P.config.contentBranch}`;
+  const cacheKey = `portfolio-documents:v2:${P.config.githubOwner}/${P.config.githubRepo}@${P.config.contentBranch}`;
   const elements = {
     category: document.getElementById('category-filter'),
     tag: document.getElementById('tag-filter'),
@@ -27,9 +27,14 @@
     const tags = Array.isArray(meta.tags)
       ? [...new Set(meta.tags.filter(tag => typeof tag === 'string').map(tag => tag.trim()).filter(Boolean))]
       : [];
+    const summary = Array.isArray(meta.summary)
+      ? meta.summary.filter(line => typeof line === 'string').map(line => line.trim()).filter(Boolean)
+      : [];
+    const hasSummary = Object.prototype.hasOwnProperty.call(meta, 'summary');
+    const validSummary = !hasSummary || (Array.isArray(meta.summary) && meta.summary.length === 4 && summary.length === 4);
     const date = typeof meta.createdate_show === 'string' ? meta.createdate_show.trim() : '';
     const validDate = /^\d{4}:\d{2}:\d{2}$/.test(date);
-    return { tags, createdate_show: validDate ? date : '', metadataValid: Array.isArray(meta.tags) && validDate };
+    return { tags, summary, createdate_show: validDate ? date : '', metadataValid: Array.isArray(meta.tags) && validDate && validSummary };
   }
 
   function dateValue(doc) {
@@ -77,7 +82,7 @@
     const docPaths = [...blobPaths].filter(path => !sidecarPaths.has(path)).sort((a, b) => a.localeCompare(b));
     const documents = await Promise.all(docPaths.map(async path => {
       const sidecar = sidecars.get(path);
-      let metadata = { tags: [], createdate_show: '', metadataValid: false };
+      let metadata = { tags: [], summary: [], createdate_show: '', metadataValid: false };
       let metadataState = sidecar ? 'invalid' : 'missing';
       if (sidecar) {
         try {
@@ -95,6 +100,7 @@
         category: P.categoryFromPath(path),
         categoryDirectory: P.categoryDirectoryFromPath(path),
         tags: metadata.tags,
+        summary: metadata.summary,
         createdate_show: metadata.createdate_show,
         metadataState
       };
@@ -210,7 +216,7 @@
     if (filters.q) {
       const needle = filters.q.toLowerCase();
       const description = state.categoryDescriptions[doc.categoryDirectory] || '';
-      const haystack = [doc.filename, doc.category, description, ...doc.tags].join(' ').toLowerCase();
+      const haystack = [doc.filename, doc.category, description, ...doc.tags, ...(doc.summary || [])].join(' ').toLowerCase();
       if (!haystack.includes(needle)) return false;
     }
     return true;
@@ -266,6 +272,16 @@
       detail.appendChild(metadata);
     }
     main.appendChild(detail);
+    if (doc.summary?.length) {
+      const summary = document.createElement('ul');
+      summary.className = 'document-summary';
+      doc.summary.forEach(line => {
+        const item = document.createElement('li');
+        item.textContent = line;
+        summary.appendChild(item);
+      });
+      main.appendChild(summary);
+    }
     if (doc.tags.length) {
       const tags = document.createElement('div');
       tags.className = 'tag-row';

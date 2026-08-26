@@ -1,0 +1,10 @@
+{
+  "tags": ["video-generation", "diffusion-models", "model-comparison"],
+  "summary": [
+    "比較 SDXL、Wan2.1、Wan2.2、HunyuanVideo 與 MiniMax H3 的核心架構與定位。",
+    "整理 U-Net、DiT、Flow Matching、VAE 與 MoE 等訓練及生成技術差異。",
+    "分析各模型的推理資源、控制能力、開源程度與工具生態系。",
+    "提供圖片與影片生成模型選型、部署及應用情境的實務參考。"
+  ],
+  "createdate_show": "2026:08:26"
+}

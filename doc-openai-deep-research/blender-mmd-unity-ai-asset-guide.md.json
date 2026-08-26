@@ -1,0 +1,10 @@
+{
+  "tags": ["blender", "unity", "ai-assets"],
+  "summary": [
+    "整理 Blender、MMD 與 Unity 製作 AAA 級 AI 資產所需的五十項核心技能。",
+    "涵蓋建模、拓撲、UV、PBR、綁骨、動畫、最佳化與跨工具匯入流程。",
+    "建立可驗證、可重現、可回退的 AI 代理資產生產與品質控管方法。",
+    "提供分階段學習路線、工具建議及 Blender 到 Unity 的完整交付閉環。"
+  ],
+  "createdate_show": "2026:08:26"
+}
