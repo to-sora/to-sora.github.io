@@ -236,6 +236,11 @@
     if (P.isInlineRenderable(doc.path)) {
       link.href = `read.html?doc=${encodeURIComponent(doc.path)}`;
       link.textContent = 'Read →';
+    } else if (doc.extension === 'pdf') {
+      link.href = doc.path;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'View PDF ↗';
     } else {
       link.href = P.rawUrl(doc.path);
       link.target = '_blank';

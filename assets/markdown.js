@@ -31,12 +31,16 @@
     }
   }
 
+  function cleanMarkdownSource(value) {
+    return String(value || '').replace(/\uE200cite\uE202[^\uE201]*\uE201/g, '');
+  }
+
   async function renderMarkdownInto(element, markdown, sourcePath) {
     if (!window.marked || !window.DOMPurify) {
       throw new Error('Markdown renderer dependencies failed to load.');
     }
 
-    const html = window.marked.parse(markdown, {
+    const html = window.marked.parse(cleanMarkdownSource(markdown), {
       gfm: true,
       breaks: false
     });
