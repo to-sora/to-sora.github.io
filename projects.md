@@ -1,15 +1,11 @@
-# Projects
+# Here is some project page
 
-Edit only this Markdown file to maintain the Projects page.
 
-## TODO: Project name
 
-TODO: Describe the project, what problem it solves, what you built, and the result.
+## Relative New project ( should be)
 
-- Repository: TODO
-- Demo / paper / notes: TODO
-- Technologies: TODO
 
-## TODO: Another project
 
-TODO: Add another project section, or delete this example.
+## Old project
+
+
