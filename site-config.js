@@ -3,5 +3,6 @@ window.PORTFOLIO_CONFIG = Object.freeze({
   githubRepo: "to-sora.github.io",
   contentBranch: "main",
   documentDirectoryPrefix: "doc-",
+  htmlSiteDirectory: "doc-html",
   categoryDescriptionsPath: "categories.json"
 });
