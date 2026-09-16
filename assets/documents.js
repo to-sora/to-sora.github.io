@@ -2,7 +2,7 @@
   'use strict';
 
   const P = window.Portfolio;
-  const cacheKey = `portfolio-documents:v2:${P.config.githubOwner}/${P.config.githubRepo}@${P.config.contentBranch}`;
+  const cacheKey = `portfolio-documents:v3:${P.config.githubOwner}/${P.config.githubRepo}@${P.config.contentBranch}`;
   const elements = {
     category: document.getElementById('category-filter'),
     tag: document.getElementById('tag-filter'),
@@ -15,15 +15,28 @@
 
   const state = { documents: [], categoryDescriptions: {}, source: 'network' };
 
+  function htmlSiteDirectory() {
+    return P.config.htmlSiteDirectory || 'doc-html';
+  }
+
+  function isHtmlSiteEntry(path) {
+    const parts = String(path || '').split('/');
+    return parts.length === 3
+      && parts[0] === htmlSiteDirectory()
+      && Boolean(parts[1])
+      && parts[2].toLowerCase() === 'index.html';
+  }
+
   function isDocumentPath(path) {
     const prefix = P.config.documentDirectoryPrefix || 'doc-';
     const parts = path.split('/');
-    if (parts.length < 2 || !parts[0].startsWith(prefix)) return false;
+    if (parts.length < 2 || !parts[0].startsWith(prefix) || parts[0] === htmlSiteDirectory()) return false;
     return !parts.slice(1, -1).some(part => part.startsWith('_'));
   }
 
   function normalizeMetadata(value) {
     const meta = value && typeof value === 'object' ? value : {};
+    const title = typeof meta.title === 'string' ? meta.title.trim() : '';
     const tags = Array.isArray(meta.tags)
       ? [...new Set(meta.tags.filter(tag => typeof tag === 'string').map(tag => tag.trim()).filter(Boolean))]
       : [];
@@ -34,7 +47,8 @@
     const validSummary = !hasSummary || (Array.isArray(meta.summary) && meta.summary.length === 4 && summary.length === 4);
     const date = typeof meta.createdate_show === 'string' ? meta.createdate_show.trim() : '';
     const validDate = /^\d{4}:\d{2}:\d{2}$/.test(date);
-    return { tags, summary, createdate_show: validDate ? date : '', metadataValid: Array.isArray(meta.tags) && validDate && validSummary };
+    const validTitle = !Object.prototype.hasOwnProperty.call(meta, 'title') || Boolean(title);
+    return { title, tags, summary, createdate_show: validDate ? date : '', metadataValid: Array.isArray(meta.tags) && validDate && validSummary && validTitle };
   }
 
   function dateValue(doc) {
@@ -68,21 +82,14 @@
     const response = await fetch(P.apiTreeUrl(), { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-cache' });
     if (!response.ok) throw new Error(`GitHub tree request failed (${response.status}).`);
     const payload = await response.json();
-    const blobs = (payload.tree || []).filter(item => item.type === 'blob' && isDocumentPath(item.path));
-    const blobPaths = new Set(blobs.map(item => item.path));
-    const sidecars = new Map();
-
-    for (const path of blobPaths) {
-      if (!path.endsWith('.json')) continue;
-      const candidate = path.slice(0, -'.json'.length);
-      if (blobPaths.has(candidate)) sidecars.set(candidate, path);
-    }
-
-    const sidecarPaths = new Set(sidecars.values());
-    const docPaths = [...blobPaths].filter(path => !sidecarPaths.has(path)).sort((a, b) => a.localeCompare(b));
+    const blobPaths = new Set((payload.tree || []).filter(item => item.type === 'blob').map(item => item.path));
+    const docPaths = [...blobPaths]
+      .filter(path => isDocumentPath(path) || isHtmlSiteEntry(path))
+      .filter(path => !path.endsWith('.json') || !blobPaths.has(path.slice(0, -'.json'.length)))
+      .sort((a, b) => a.localeCompare(b));
     const documents = await Promise.all(docPaths.map(async path => {
-      const sidecar = sidecars.get(path);
-      let metadata = { tags: [], summary: [], createdate_show: '', metadataValid: false };
+      const sidecar = blobPaths.has(`${path}.json`) ? `${path}.json` : '';
+      let metadata = { title: '', tags: [], summary: [], createdate_show: '', metadataValid: false };
       let metadataState = sidecar ? 'invalid' : 'missing';
       if (sidecar) {
         try {
@@ -92,13 +99,17 @@
           metadataState = 'invalid';
         }
       }
+      const htmlSite = isHtmlSiteEntry(path);
+      const siteSlug = htmlSite ? path.split('/')[1] : '';
       return {
         path,
         sidecar: sidecar || '',
+        kind: htmlSite ? 'html-site' : 'document',
+        title: metadata.title || (htmlSite ? P.humanize(siteSlug) : ''),
         filename: P.fileName(path),
         extension: P.extension(path),
-        category: P.categoryFromPath(path),
-        categoryDirectory: P.categoryDirectoryFromPath(path),
+        category: htmlSite ? 'html' : P.categoryFromPath(path),
+        categoryDirectory: htmlSite ? htmlSiteDirectory() : P.categoryDirectoryFromPath(path),
         tags: metadata.tags,
         summary: metadata.summary,
         createdate_show: metadata.createdate_show,
@@ -216,7 +227,7 @@
     if (filters.q) {
       const needle = filters.q.toLowerCase();
       const description = state.categoryDescriptions[doc.categoryDirectory] || '';
-      const haystack = [doc.filename, doc.category, description, ...doc.tags, ...(doc.summary || [])].join(' ').toLowerCase();
+      const haystack = [doc.title, doc.filename, doc.category, description, ...doc.tags, ...(doc.summary || [])].join(' ').toLowerCase();
       if (!haystack.includes(needle)) return false;
     }
     return true;
@@ -231,6 +242,9 @@
   }
 
   function documentDestination(doc) {
+    if (doc.kind === 'html-site') {
+      return { href: P.staticSiteUrl(doc.path), label: 'View site ↗', newTab: true };
+    }
     if (P.isInlineRenderable(doc.path)) {
       return { href: `read.html?doc=${encodeURIComponent(doc.path)}`, label: 'Read →', newTab: false };
     }
@@ -267,13 +281,13 @@
     const title = document.createElement('h3');
     const titleLink = document.createElement('a');
     titleLink.className = 'document-title-link';
-    titleLink.textContent = doc.filename;
+    titleLink.textContent = doc.title || doc.filename;
     applyDocumentDestination(titleLink, destination);
     title.appendChild(titleLink);
     heading.appendChild(title);
     const ext = document.createElement('span');
     ext.className = 'extension-badge';
-    ext.textContent = doc.extension || 'file';
+    ext.textContent = doc.kind === 'html-site' ? 'site' : (doc.extension || 'file');
     heading.appendChild(ext);
     main.appendChild(heading);
     const detail = document.createElement('div');
