@@ -11,6 +11,7 @@ For normal use, edit only:
 - `documents.md` — short introduction above the document browser.
 - `categories.json` — optional map from a `doc-*` directory name to its category description.
 - `doc-*/...` — your documents and their metadata sidecars.
+- `doc-html/<site>/...` — independent static HTML sites with their own assets.
 
 The `.html` files and `assets/*.js` / `assets/*.css` are renderer implementation files. You should not need to edit them.
 
@@ -129,12 +130,52 @@ LaTeX:
 
 Both are resolved relative to the source document.
 
+## Independent static HTML sites
+
+Each immediate child of `doc-html/` is an independent static site. The document browser indexes only its `index.html` entry point and ignores every supporting CSS, JavaScript, image, font, and media file below that site directory.
+
+```text
+doc-html/
+└── example-site/
+    ├── index.html
+    ├── index.html.json
+    └── asset/
+        ├── style.css
+        └── app.js
+```
+
+Use paths relative to `index.html`:
+
+```html
+<link rel="stylesheet" href="./asset/style.css">
+<script src="./asset/app.js"></script>
+```
+
+The sidecar extends the normal document metadata with an optional display title:
+
+```json
+{
+  "title": "Example site",
+  "tags": ["interactive"],
+  "summary": [
+    "Summary line 1.",
+    "Summary line 2.",
+    "Summary line 3.",
+    "Summary line 4."
+  ],
+  "createdate_show": "2026:09:16"
+}
+```
+
+The document card links to `doc-html/example-site/`, allowing the browser to load the static site's own assets.
+
 ## Metadata schema
 
 The sidecar schema remains:
 
 ```json
 {
+  "title": "Optional display title",
   "tags": ["tag1", "tag2", "tag3"],
   "summary": [
     "Short summary line 1.",
