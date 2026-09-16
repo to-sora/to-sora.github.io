@@ -25,6 +25,13 @@
     return `https://api.github.com/repos/${encodeURIComponent(config.githubOwner)}/${encodeURIComponent(config.githubRepo)}/git/trees/${encodeURIComponent(config.contentBranch)}?recursive=1`;
   }
 
+  function staticSiteUrl(entryPath) {
+    const parts = String(entryPath || '').split('/').filter(Boolean);
+    if (parts.at(-1)?.toLowerCase() === 'index.html') parts.pop();
+    const encoded = parts.map(segment => encodeURIComponent(segment)).join('/');
+    return encoded ? `${encoded}/` : './';
+  }
+
   function fileName(path) {
     return String(path || '').split('/').pop() || '';
   }
@@ -73,6 +80,7 @@
     rawUrl,
     repoUrl,
     apiTreeUrl,
+    staticSiteUrl,
     fileName,
     extension,
     categoryDirectoryFromPath,
