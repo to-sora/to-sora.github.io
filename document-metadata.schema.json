@@ -3,17 +3,30 @@
   "$id": "document-metadata.schema.json",
   "title": "Portfolio document metadata",
   "type": "object",
-  "required": ["tags", "createdate_show"],
+  "required": [
+    "tags",
+    "createdate_show"
+  ],
   "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
     "tags": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true
     },
     "summary": {
       "type": "array",
       "description": "Four short summary lines displayed in the document library.",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "minItems": 4,
       "maxItems": 4
     },
